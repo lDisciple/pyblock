@@ -1,9 +1,9 @@
 import {Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, HostListener, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewChild} from '@angular/core';
 
 import * as Blockly from 'scratch-blocks';
-import {HttpClient} from '@angular/common/http';
-import CodeExecutor from '../../models/code-executor.model';
-import {CONFIG} from '../../constants';
+import {HttpClient, provideHttpClient} from '@angular/common/http';
+import CodeExecutor from './models/code-executor.model';
+import {CONFIG} from './constants';
 import {tap} from 'rxjs/operators';
 import {NgxJsonViewerModule} from 'ngx-json-viewer';
 import {AsyncPipe, NgIf} from '@angular/common';
@@ -15,9 +15,9 @@ import { Location } from '@angular/common';
 
 @Component({
   standalone: true,
-  selector: 'app-blockly',
-  templateUrl: './blockly.component.html',
-  styleUrls: ['./blockly.component.css'],
+  selector: 'pyblock-editor',
+  templateUrl: './pyblock.component.html',
+  styleUrls: ['./pyblock.component.css'],
   imports: [
     NgxJsonViewerModule,
     AsyncPipe,
@@ -26,7 +26,7 @@ import { Location } from '@angular/common';
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA]
 })
-export class BlocklyComponent implements OnInit, OnDestroy {
+export class PyblockComponent implements OnInit, OnDestroy {
   toolboxUrl: string;
   workspace: any;
   output = 'Disconnected';

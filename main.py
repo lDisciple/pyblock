@@ -8,11 +8,12 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
 
-from engine.blocks import get_block_definition
-from engine.blocks import CorePluginContext
+from engine.blocks.block import get_block_definition
+from engine.blocks.core_plugin import CorePluginContext
+from engine.blocks.default import default_blocks
 from engine.executor.executor import Executor
-from engine.plugins import gui_blocks, GuiPluginContext
-from engine.plugins import keyboard_blocks
+from engine.plugins.gui import gui_blocks, GuiPluginContext
+from engine.plugins.keyboard import keyboard_blocks
 
 logging_config_file = os.environ['LOGGING_CONFIG_FILE'] if 'LOGGING_CONFIG_FILE' in os.environ else 'logging.conf'
 print(os.path.abspath(logging_config_file or "logging.conf"))
@@ -42,12 +43,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.mount("/static/editor", StaticFiles(directory="static/editor"), name="editor")
-app.mount("/static/media", StaticFiles(directory="static/editor/media"), name="editor-media")
+if os.path.exists("static/editor"):
+    app.mount("/static/editor", StaticFiles(directory="static/editor"), name="editor")
+    app.mount("/static/media", StaticFiles(directory="static/editor/media"), name="editor-media")
 
 
 @app.get('/')
 def get_app():
+    if not os.path.exists("static/editor/index.html"):
+        return HTMLResponse("Editor has not been compiled. Please see the Readme for more information.", 200)
     with open('static/editor/index.html', 'r') as file_index:
         html_content = file_index.read()
     return HTMLResponse(html_content, status_code=200)

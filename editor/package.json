@@ -1,5 +1,5 @@
 {
-  "name": "blockly-angular-sample",
+  "name": "pyblock-editor",
   "version": "0.0.0",
   "scripts": {
     "audit": "npm audit fix",

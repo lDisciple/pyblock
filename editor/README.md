@@ -1,8 +1,8 @@
 [Home](../README.md)
 
-# blockly-angular-sample [![Built on Blockly](https://tinyurl.com/built-on-blockly)](https://github.com/google/blockly)
+# Pyblock-editor [![Built on Blockly](https://tinyurl.com/built-on-blockly)](https://github.com/google/blockly)
 
-This sample shows how to load Blockly in an [Angular](https://angular.io/) project.
+This is a simple editor created for the Pyblock Engine. . Please see
 
 ## Installation
 
@@ -11,7 +11,7 @@ npm install
 ```
 
 ## Running
-
+The editor requires the engine to be run on localhost:3001. Please see the `pyblock` project for more information.
 ```
 npm run start
 ```
