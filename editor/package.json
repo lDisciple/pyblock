@@ -7,9 +7,8 @@
     "ng": "ng",
     "start": "ng serve --port 3000",
     "build": "ng build",
-    "test": "ng test",
-    "lint": "ng lint",
-    "e2e": "ng e2e"
+    "build-engine": "ng build  --configuration production --base-href static/editor/",
+    "lint": "ng lint"
   },
   "private": true,
   "dependencies": {

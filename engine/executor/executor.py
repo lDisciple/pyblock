@@ -241,8 +241,6 @@ class Executor:
 
     def add_plugin_context(self, context_creator: Callable[[], ContextManager]):
         key = context_creator.__name__
-        # if key in self.plugin_contexts: TODO
-        #     raise KeyError("This context is already assigned")
         self.plugin_contexts[key] = context_creator
 
     def __create_plugin_contexts(self):
