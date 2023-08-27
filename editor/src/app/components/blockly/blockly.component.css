@@ -1,0 +1,4 @@
+#blocklyDiv {
+    height: calc(100vh - 10em);
+    width: 100%;
+}

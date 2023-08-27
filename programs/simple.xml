@@ -1,0 +1,77 @@
+<xml xmlns="http://www.w3.org/1999/xhtml">
+    <variables>
+        <variable type="" id="Q~K;%//HVg)ME|r#7eH%" islocal="false" iscloud="false">test</variable>
+        <variable type="broadcast_msg" id="Px@?-ON3cOxubxNCBUch" islocal="false" iscloud="false">message1</variable>
+        <variable type="broadcast_msg" id="-iMux[:?ZRj)3fH)E%^4" islocal="false" iscloud="false">doThing</variable>
+        <variable type="broadcast_msg" id="CsX,NlD.z$crbGA^AuoA" islocal="false" iscloud="false">doOtherThing</variable>
+    </variables>
+    <block type="event_whenflagclicked" id="iL`2vsg3zR:;jz_7#Z,s" x="365" y="157">
+        <next>
+            <block type="data_setvariableto" id="%N9-cpJ^::nR3^|JUARO">
+                <field name="VARIABLE" id="Q~K;%//HVg)ME|r#7eH%" variabletype="">test</field>
+                <value name="VALUE">
+                    <shadow type="text" id="1IkuVz)FUAb*ng,CB.zX">
+                        <field name="TEXT">10</field>
+                    </shadow>
+                </value>
+                <next>
+                    <block type="control_if_else" id="*TU-/_}DdM@6=lBL2%I|">
+                        <value name="CONDITION">
+                            <block type="operator_gt" id="u23DvHXF?xk]E_arSNZl">
+                                <value name="OPERAND1">
+                                    <shadow type="text" id="9u!HZKi?JaU6]Z?TPb9(">
+                                        <field name="TEXT">10</field>
+                                    </shadow>
+                                    <block type="data_variable" id="7,Kx,)fN5iKf^~9fmqe{">
+                                        <field name="VARIABLE" id="Q~K;%//HVg)ME|r#7eH%" variabletype="">test</field>
+                                    </block>
+                                </value>
+                                <value name="OPERAND2">
+                                    <shadow type="text" id="xA8FDS^MlNkY=GmGeTZ1">
+                                        <field name="TEXT">20</field>
+                                    </shadow>
+                                </value>
+                            </block>
+                        </value>
+                        <statement name="SUBSTACK">
+                            <block type="event_broadcast" id="kWH*X:[Fw~C}[LdpborJ">
+                                <value name="BROADCAST_INPUT">
+                                    <shadow type="event_broadcast_menu" id=")bcG}+tvs*j`[SK%A9r/">
+                                        <field name="BROADCAST_OPTION" id="-iMux[:?ZRj)3fH)E%^4"
+                                               variabletype="broadcast_msg">doThing
+                                        </field>
+                                    </shadow>
+                                </value>
+                            </block>
+                        </statement>
+                        <statement name="SUBSTACK2">
+                            <block type="event_broadcast" id="Ys[c|f*`Rd,h]$#;*bSC">
+                                <value name="BROADCAST_INPUT">
+                                    <shadow type="event_broadcast_menu" id="9nKK#sZ]ihvq#NRL+WM*">
+                                        <field name="BROADCAST_OPTION" id="CsX,NlD.z$crbGA^AuoA"
+                                               variabletype="broadcast_msg">doOtherThing
+                                        </field>
+                                    </shadow>
+                                </value>
+                            </block>
+                        </statement>
+                    </block>
+                </next>
+            </block>
+        </next>
+    </block>
+    <block type="control_wait" id="SCK^h!Em|hDcX};k.5x(" x="855" y="259">
+        <value name="DURATION">
+            <shadow type="math_positive_number" id="YCnp+iMYZh^?q=x$A_p]">
+                <field name="NUM">1</field>
+            </shadow>
+        </value>
+    </block>
+    <block type="control_repeat" id="jJyS5e`oVO?2/U~QwQcd" x="757" y="450">
+        <value name="TIMES">
+            <shadow type="math_whole_number" id="/A*n%9H8-{4$$+;=:f_j">
+                <field name="NUM">10</field>
+            </shadow>
+        </value>
+    </block>
+</xml>

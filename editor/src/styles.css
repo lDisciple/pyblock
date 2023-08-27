@@ -1,0 +1,19 @@
+/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+    margin: 0;
+}
+
+@layer components {
+
+  button {
+    @apply text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm
+    px-5 py-2.5 focus:outline-none ;
+  }
+  /*button {*/
+  /*  @apply py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75;*/
+  /*}*/
+}
