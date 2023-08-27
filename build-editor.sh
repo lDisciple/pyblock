@@ -1,5 +1,6 @@
 #!/bin/bash
 cd editor || exit
+npm i
 npm run build-engine || exit
 cd ..
 rm -rf static/editor
