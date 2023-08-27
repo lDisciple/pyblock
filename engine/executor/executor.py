@@ -9,7 +9,7 @@ from engine.blocks.block import PyBlockSettings
 from engine.blocks.default import default_blocks
 from engine.executor.context import Context
 from engine.executor.variable_reference import VariableRef
-from util import noop
+from engine.util import noop
 
 logger = logging.getLogger(__name__)
 

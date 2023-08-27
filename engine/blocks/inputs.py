@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from engine.blocks.argument import Argument
-from util import noop
+from engine.util import noop
 
 
 @dataclass(frozen=True)

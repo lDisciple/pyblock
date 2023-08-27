@@ -8,7 +8,7 @@ from typing import Unpack, TypedDict, NotRequired, Optional, Callable
 
 from engine.blocks.argument import Argument
 from engine.blocks.output_shapes import OutputShape
-from util import noop
+from engine.util import noop
 
 logger = logging.getLogger(__name__)
 
