@@ -42,7 +42,7 @@ def operator_lt(context: Context, operand1: float, operand2: float):
 
 @pyblock(category="operators", is_predefined=True)
 def operator_equals(context: Context, operand1: float, operand2: float):
-    return float(operand1) == float(operand2)
+    return operand1 == operand2
 
 
 @pyblock(category="operators", is_predefined=True)

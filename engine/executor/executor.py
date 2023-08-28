@@ -1,3 +1,4 @@
+import builtins
 import json
 import logging
 import re
@@ -5,10 +6,13 @@ import xml.etree.ElementTree as ElementTree
 from collections import deque
 from typing import Any, Callable, ContextManager
 
-from engine.blocks.block import PyBlockSettings
+from engine.blocks.block import PyBlockSettings, PyBlockDefinition
 from engine.blocks.default import default_blocks
+from engine.blocks.fields import Variable
 from engine.executor.context import Context
 from engine.executor.variable_reference import VariableRef
+from engine.executor.variables.core_variable_handlers import core_variable_handlers
+from engine.executor.variables.variable_handler import VariableHandler
 from engine.util import noop
 
 logger = logging.getLogger(__name__)
@@ -38,10 +42,14 @@ class Executor:
     plugin_contexts: dict[str, Callable[['Executor'], ContextManager]] = {}
     active_contexts: dict[str, ContextManager[Any]] = {}
     event_listeners: [Callable[[str, str], None]] = []
+    global_event_listeners: [Callable[[str, str], None]] = []
+    variable_handlers: dict[str, VariableHandler] = {}
 
     def __init__(self, load_default_blocks=True):
         if load_default_blocks:
             self.load_blocks(default_blocks)
+        for handler in core_variable_handlers:
+            self.add_variable_handler(handler())
 
     def load_blocks(self, blocks: list[PyBlockSettings]):
         for block in blocks:
@@ -109,7 +117,8 @@ class Executor:
         block_settings = self.get_block_settings(block_type)
         block_definition = block_settings["definition"]
 
-        func_kwargs = self.extract_context(block_node, is_eager=is_eager)
+        func_kwargs: dict[str, Context] = self.extract_context(block_node, is_eager=is_eager)
+        func_kwargs = {Executor.remove_reserved_words_from_param_name(k): v for k, v in func_kwargs.items()}
         func_kwargs.update(task.extra_kwargs)
         if block_definition:
             for arg in block_definition.arguments:
@@ -130,7 +139,10 @@ class Executor:
             var_type: str = variable.get("type")
             var_name: str = variable.text
             var_ref = VariableRef(var_type, var_id)
-            self.variables[var_ref] = 0 if var_type == "" else variable.text
+            if var_type in self.variable_handlers:
+                self.variables[var_ref] = self.variable_handlers[var_type].get_default_value(variable)
+            else:
+                self.variables[var_ref] = variable.text
             self.variable_names[var_ref] = var_name
             logger.debug(f"Loaded variable: [{var_ref[0]}-{var_ref[1]}]={self.variables[var_ref]}")
 
@@ -138,10 +150,11 @@ class Executor:
         context = self.create_default_context(current_block, is_eager=is_eager)
         for el in current_block:
             name = el.get("name").lower() if el.get("name") else None
+            is_ref_type = self.__is_variable_ref_type(current_block, name)
             if el.tag == "field":
-                context[name] = self.parse_field(el, True)
+                context[name] = self.parse_field(el, is_ref_type)
             elif el.tag == "value":
-                context[name] = self.parse_value(el)
+                context[name] = self.parse_value(el, is_ref_type)
             elif el.tag == "statement":
                 context[name] = self.parse_statement(el, is_eager)
         return context
@@ -176,13 +189,13 @@ class Executor:
                 return float(el.text)
             return el.text
 
-    def parse_value(self, el: ElementTree.Element):
+    def parse_value(self, el: ElementTree.Element, is_ref_type = False):
         block = el.find("block")
         if block is not None:
             return self.execute_block(block, is_eager=True)
         shadow = el.find("shadow")
         if shadow is not None:
-            return self.parse_shadow(shadow)
+            return self.parse_shadow(shadow, is_ref_type)
         raise ExecutionException("Could not parse value block")
 
     def parse_statement(self, el: ElementTree.Element, is_eager: bool) -> Callable:
@@ -201,16 +214,24 @@ class Executor:
 
         return func
 
-    def parse_shadow(self, el):
+    def parse_shadow(self, el, is_ref_type = False):
         field = el.find("field")
         if field is not None:
-            return self.parse_field(field, False)
+            return self.parse_field(field, is_ref_type)
         raise ExecutionException("Could not parse shadow block. No field element found")
 
     def add_broadcast_listener(self, callback: Callable[[str, str], None]):
         self.event_listeners.append(callback)
 
+    """
+    Adds an event listener that does not get removed on every run
+    """
+    def add_global_broadcast_listener(self, callback: Callable[[str, str], None]):
+        self.global_event_listeners.append(callback)
+
     def broadcast(self, topic: str, message: str):
+        for event_listener in self.global_event_listeners:
+            event_listener(topic, message)
         for event_listener in self.event_listeners:
             event_listener(topic, message)
 
@@ -239,9 +260,41 @@ class Executor:
     def get_task_count(self):
         return len(self.task_stack)
 
+    @staticmethod
+    def remove_reserved_words_from_param_name(name: str):
+        if name in globals() or name in dir(builtins):
+            return f"param_{name}"
+        return name
+
+    def add_variable_handler(self, handler: VariableHandler):
+        self.variable_handlers[handler.get_type_name()] = handler
+
     def add_plugin_context(self, context_creator: Callable[[], ContextManager]):
         key = context_creator.__name__
         self.plugin_contexts[key] = context_creator
+
+    def __is_variable_ref_type(self, block_node: ElementTree.Element, name: str):
+        if name is None:
+            return False
+
+        block_type = block_node.get("type")
+        block_settings = self.get_block_settings(block_type)
+        # Check arguments first
+        if "definition" in block_settings and block_settings["definition"] is not None:
+            definition: PyBlockDefinition = block_settings["definition"]
+            for arg in definition.arguments:
+                if arg.name == name:
+                    return type(arg) == Variable
+        # Check annotations
+        func: Any = block_settings["func"]
+        type_hints = func.__annotations__
+        sanitised_name = Executor.remove_reserved_words_from_param_name(name)
+        if type_hints is not None and sanitised_name in type_hints and type_hints[sanitised_name] == VariableRef:
+            return True
+
+        # Default to value-type
+        return False
+
 
     def __create_plugin_contexts(self):
         for key, plugin_context_creator in self.plugin_contexts.items():

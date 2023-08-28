@@ -79,6 +79,12 @@ async def ws(websocket: WebSocket):
 
     broadcast_list = []
 
+    def broadcast_listener(topic, message):
+        broadcast_list.append([topic, message])
+        print(broadcast_list)
+
+    executor.add_global_broadcast_listener(broadcast_listener)
+
     def get_status():
         nonlocal broadcast_list
         obj = {
@@ -103,12 +109,6 @@ async def ws(websocket: WebSocket):
                         executor.start(data_json["isEager"])
                     else:
                         executor.start()
-
-                    def broadcast_listener(topic, message):
-                        broadcast_list.append([topic, message])
-                        print(broadcast_list)
-
-                    executor.add_broadcast_listener(broadcast_listener)
                     await websocket.send_json(get_status())
                 if message_type == "complete":
                     executor.complete()
