@@ -3,6 +3,7 @@ import logging.config
 import os
 from typing import Callable, ContextManager
 
+import uvicorn
 from fastapi import FastAPI, WebSocket
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import HTMLResponse
@@ -139,3 +140,7 @@ async def ws(websocket: WebSocket):
         logger.error("Websocket closed unexpectedly", exc_info=e)
     finally:
         executor.stop()
+
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", port=3001)
