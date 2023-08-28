@@ -15,6 +15,8 @@ from engine.blocks.default import default_blocks
 from engine.executor.executor import Executor
 from engine.plugins.gui import gui_blocks, GuiPluginContext
 from engine.plugins.keyboard import keyboard_blocks
+from engine.plugins.numbers import numbers_blocks
+from engine.plugins.strings import strings_blocks
 
 logging_config_file = os.environ['LOGGING_CONFIG_FILE'] if 'LOGGING_CONFIG_FILE' in os.environ else 'logging.conf'
 print(os.path.abspath(logging_config_file or "logging.conf"))
@@ -24,7 +26,9 @@ logger = logging.getLogger()
 loaded_blocks = [
     *default_blocks,
     *keyboard_blocks,
-    *gui_blocks
+    *gui_blocks,
+    *strings_blocks,
+    *numbers_blocks
 ]
 
 loaded_plugin_contexts: list[Callable[['Executor'], ContextManager]] = [

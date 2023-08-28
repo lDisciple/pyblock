@@ -94,6 +94,18 @@
         </shadow>
       </value>
     </block>
+    <block type="numbers_isnumeric" id="numbers_isnumeric">
+      <value name="VALUE">
+        <shadow type="text">
+          <field name="TEXT">1.0</field>
+        </shadow>
+      </value>
+      <value name="TO">
+        <shadow type="math_number">
+          <field name="NUM">10</field>
+        </shadow>
+      </value>
+    </block>
     <block type="operator_lt" id="operator_lt">
       <value name="OPERAND1">
         <shadow type="text">
@@ -145,12 +157,48 @@
         </shadow>
       </value>
     </block>
+    <block type="string_splitvar" id="string_splitvar">
+      <value name="STRING">
+        <shadow type="text">
+          <field name="TEXT">1,2,3</field>
+        </shadow>
+      </value>
+      <value name="CHARS">
+        <shadow type="text">
+          <field name="TEXT">,</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="string_substring" id="string_substring">
+      <value name="START">
+        <shadow type="math_whole_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+      <value name="END">
+        <shadow type="math_whole_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+      <value name="STRING">
+        <shadow type="text">
+          <field name="TEXT">Hello</field>
+        </shadow>
+      </value>
+    </block>
     <block type="operator_letter_of" id="operator_letter_of">
       <value name="LETTER">
         <shadow type="math_whole_number">
           <field name="NUM">1</field>
         </shadow>
       </value>
+      <value name="STRING">
+        <shadow type="text">
+          <field name="TEXT">world</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="string_trim" id="string_trim">
       <value name="STRING">
         <shadow type="text">
           <field name="TEXT">world</field>
@@ -213,12 +261,22 @@
         </shadow>
       </value>
     </block>
+    <block type="press_key" id="press_key"></block>
+    <block type="release_key" id="release_key"></block>
     <block type="next_pane" id="next_pane"></block>
     <block type="prev_pane" id="prev_pane"></block>
     <block type="next_record" id="next_record"></block>
     <block type="prev_record" id="prev_record"></block>
     <block type="next_field" id="next_field"></block>
     <block type="go_to_first_record" id="go_to_first_record"></block>
+    <block type="set_clipboard_to" id="set_clipboard_to">
+      <value name="TEXT">
+        <shadow type="text">
+          <field name="TEXT">Copied</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="clipboard_value" id="clipboard_value"></block>
   </category>
   <category name="GUI" id="gui" colour="#8d3187" secondaryColour="#8d3187">
     <block type="create_layout" id="create_layout">

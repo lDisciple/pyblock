@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 @dataclass()
 class PyBlockDefinition:
     title: str = "Unknown Block"
-    color: int = 160
+    color: int | str = 160
     arguments: list[Argument] = field(default_factory=list)
     has_next_statement: bool = False  # Could add a statement type field
     has_previous_statement: bool = False  # Could add a statement type
@@ -87,6 +87,7 @@ def get_block_definition(block: PyBlockSettings):
         result[f"args{i}"] = []
         message_arg_counter = 0
 
+        # noinspection PyUnusedLocal
         def sub(m: re.Match):
             nonlocal message_arg_counter
             message_arg_counter = message_arg_counter + 1

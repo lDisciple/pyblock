@@ -32,3 +32,5 @@ sudo apt-get install xclip
 
 ## Possible roadmap
 - [ ] Add toolbox functionality
+- [ ] Enable creating extensions (replace incorrect use of output_*)
+- [ ] Fix variable values creating new letter variables (i,j,k...)

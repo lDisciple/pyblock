@@ -2,6 +2,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,angular
 log.txt
 static/editor
+ignore-*
 ### Angular ###
 ## Angular ##
 # compiled output
