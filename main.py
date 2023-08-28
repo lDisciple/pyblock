@@ -133,7 +133,7 @@ async def ws(websocket: WebSocket):
                 logger.error("Executor encountered an error", exc_info=e)
                 await websocket.send_text(json.dumps({
                     "type": "error",
-                    "value": str(e)
+                    "value": f"{type(e).__name__}: {str(e)}"
                 }))
         await websocket.close()
     except Exception as e:

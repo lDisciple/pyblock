@@ -17,11 +17,12 @@ logger = logging.getLogger(__name__)
 class PyBlockDefinition:
     title: str = "Unknown Block"
     color: int = 160
+    arguments: list[Argument] = field(default_factory=list)
     has_next_statement: bool = False  # Could add a statement type field
     has_previous_statement: bool = False  # Could add a statement type
     output: str = None
     output_shape: Optional[OutputShape] = None
-    arguments: list[Argument] = field(default_factory=list)
+    extensions: list[str] = None
 
 
 class PyBlockSettings(TypedDict, total=False):
@@ -104,6 +105,8 @@ def get_block_definition(block: PyBlockSettings):
         result["outputShape"] = definition.output_shape.value
     if definition.output:
         result["output"] = definition.output
+    if definition.extensions:
+        result["extensions"] = definition.extensions
     return result
 
 

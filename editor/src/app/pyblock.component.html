@@ -1,7 +1,7 @@
 <div class="flex flex-col">
   <div class="flex flex-row">
     <div id="blocklyDiv"></div>
-    <ngx-json-viewer *ngIf="executor" class="w-1/6" [json]="executor?.variables$ | async"></ngx-json-viewer>
+    <ngx-json-viewer *ngIf="executor" class="w-1/6" [expanded]="false" [json]="executor?.variables$ | async"></ngx-json-viewer>
   </div>
   <div class="flex flex-row min-h-[10em]">
 

@@ -1,3 +1,6 @@
+import string
+
+import pyperclip
 from pynput.keyboard import Key, Controller
 
 from engine.blocks.block import pyblock, PyBlockDefinition, collect_blocks
@@ -9,6 +12,15 @@ keyboard = Controller()
 
 category = "keyboard"
 color = 176
+
+key_list = ([(letter, letter) for letter in string.ascii_lowercase + string.digits] +
+            [(k.name, k.name) for k in Key])
+
+
+def resolve_key(key: str):
+    if len(key) > 1:
+        return Key[key]
+    return key
 
 
 @pyblock(
@@ -145,6 +157,69 @@ def go_to_first_record(context: Context):
 def type_text(context: Context, text: str):
     keyboard.type(text)
     context.next()
+
+
+@pyblock(
+    category=category,
+    definition=PyBlockDefinition(
+        title="Press %1",
+        arguments=[
+            Dropdown(name="KEY", options=key_list)
+        ],
+        has_next_statement=True,
+        has_previous_statement=True,
+        color=color
+    )
+)
+def press_key(context: Context, key: str):
+    keyboard.press(resolve_key(key))
+    context.next()
+
+
+@pyblock(
+    category=category,
+    definition=PyBlockDefinition(
+        title="Release %1",
+        arguments=[
+            Dropdown(name="KEY", options=key_list)
+        ],
+        has_next_statement=True,
+        has_previous_statement=True,
+        color=color
+    )
+)
+def release_key(context: Context, key: str):
+    keyboard.release(resolve_key(key))
+    context.next()
+
+
+@pyblock(
+    category=category,
+    definition=PyBlockDefinition(
+        title="Set clipboard to %1",
+        arguments=[
+            InputValue(name="TEXT")
+        ],
+        has_next_statement=True,
+        has_previous_statement=True,
+        color=color
+    )
+)
+def set_clipboard_to(context: Context, text: str):
+    pyperclip.copy(text)
+    context.next()
+
+
+@pyblock(
+    category=category,
+    definition=PyBlockDefinition(
+        title="Clipboard",
+        color=color,
+        extensions=["output_string"]
+    )
+)
+def clipboard_value(context: Context):
+    return pyperclip.paste()
 
 
 keyboard_blocks = collect_blocks(__name__)

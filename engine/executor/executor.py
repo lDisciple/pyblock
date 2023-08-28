@@ -120,13 +120,18 @@ class Executor:
         func_kwargs: dict[str, Context] = self.extract_context(block_node, is_eager=is_eager)
         func_kwargs = {Executor.remove_reserved_words_from_param_name(k): v for k, v in func_kwargs.items()}
         func_kwargs.update(task.extra_kwargs)
-        if block_definition:
+        if block_definition and block_definition.arguments is not None:
             for arg in block_definition.arguments:
                 if arg.name.lower() not in func_kwargs:
                     func_kwargs[arg.name.lower()] = arg.get_default()
 
         logger.debug(f"Executing block '{block_type}' {'eagerly ' if is_eager else ''}with context: {func_kwargs}")
-        return_value = block_settings["func"](**func_kwargs)
+        try:
+            return_value = block_settings["func"](**func_kwargs)
+        except Exception as e:
+            logger.error("Could not execute block", exc_info=e)
+            self.broadcast("error", f"{type(e).__name__}: {str(e)}")
+            return None
         logger.debug(f"Executed block '{block_type}' returned '{return_value}' using context: {func_kwargs}")
         return return_value
 

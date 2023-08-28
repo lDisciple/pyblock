@@ -24,5 +24,11 @@ The editor can be built standalone, however, it does depend on the engine runnin
 uvicorn main:app --reload --port 3001
 ```
 
-# Possible roadmap
+## Troubleshooting
+#### Pyperclip could not find a copy/paste mechanism for your system.
+```bash
+sudo apt-get install xclip
+```
+
+## Possible roadmap
 - [ ] Add toolbox functionality
