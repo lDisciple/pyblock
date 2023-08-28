@@ -13,7 +13,7 @@ The project makes use of Scratch blocks which is a fork of Google's Blockly proj
 ## Installation
 ```
 # Install Python dependencies
-pip install -f requirements.txt
+pip install -r requirements.txt
 # Build the editor view
 ./build-editor.sh
 ```
