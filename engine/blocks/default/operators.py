@@ -71,8 +71,8 @@ def operator_not(context: Context, operand1: bool):
 
 
 @pyblock(category="operators", is_predefined=True)
-def operator_join(context: Context, operand1: str, operand2: str):
-    return operand1 + operand2
+def operator_join(context: Context, string1: str, string2: str):
+    return string1 + string2
 
 
 @pyblock(category="operators", is_predefined=True)
