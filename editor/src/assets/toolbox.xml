@@ -171,12 +171,12 @@
     </block>
     <block type="string_substring" id="string_substring">
       <value name="START">
-        <shadow type="math_whole_number">
+        <shadow type="math_number">
           <field name="NUM">0</field>
         </shadow>
       </value>
       <value name="END">
-        <shadow type="math_whole_number">
+        <shadow type="math_number">
           <field name="NUM">1</field>
         </shadow>
       </value>
@@ -188,7 +188,7 @@
     </block>
     <block type="operator_letter_of" id="operator_letter_of">
       <value name="LETTER">
-        <shadow type="math_whole_number">
+        <shadow type="math_number">
           <field name="NUM">1</field>
         </shadow>
       </value>
