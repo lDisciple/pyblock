@@ -66,8 +66,8 @@ def operator_or(context: Context, operand1: bool, operand2: bool):
 
 
 @pyblock(category="operators", is_predefined=True)
-def operator_not(context: Context, operand1: bool):
-    return not operand1
+def operator_not(context: Context, operand: bool):
+    return not operand
 
 
 @pyblock(category="operators", is_predefined=True)
@@ -77,7 +77,7 @@ def operator_join(context: Context, string1: str, string2: str):
 
 @pyblock(category="operators", is_predefined=True)
 def operator_letter_of(context: Context, letter: int, string: str):
-    return string[letter]
+    return string[int(letter)]
 
 
 @pyblock(category="operators", is_predefined=True)

@@ -155,7 +155,7 @@ def go_to_first_record(context: Context):
     )
 )
 def type_text(context: Context, text: str):
-    keyboard.type(text)
+    keyboard.type(str(text))
     context.next()
 
 
