@@ -35,6 +35,7 @@ class Executor:
     _namespace_pattern = re.compile(r"xmlns=\"[^\"]+\"")
     starting_blocks: list[ElementTree.Element] = []
     block_definitions: dict[str, PyBlockSettings] = {}
+    cached_contexts: dict[tuple[str, bool], dict] = {}
     task_stack: deque[ExecutorTask] = deque()
     variables: dict[VariableRef, Any] = {}
     variable_names: dict[VariableRef, str] = {}
@@ -63,6 +64,7 @@ class Executor:
         blocks = self.program.findall("block")
         self.stop()
         self.starting_blocks = []
+        self.cached_contexts = {}
 
         possible_starting_blocks = set([b["type"] for b in self.block_definitions.values() if b["can_run"]])
         for block in blocks:
@@ -123,13 +125,11 @@ class Executor:
         block_settings = self.get_block_settings(block_type)
         block_definition = block_settings["definition"]
 
-        func_kwargs: dict[str, Context] = self.extract_context(block_node, is_eager=is_eager)
+        func_kwargs: dict[str, Any | Context] = self.extract_context_with_cache(block_node, block_definition,
+                                                                                is_eager=is_eager)
+        func_kwargs.update(self.create_default_context(block_node, is_eager=is_eager))
         func_kwargs = {Executor.remove_reserved_words_from_param_name(k): v for k, v in func_kwargs.items()}
         func_kwargs.update(task.extra_kwargs)
-        if block_definition and block_definition.arguments is not None:
-            for arg in block_definition.arguments:
-                if arg.name.lower() not in func_kwargs:
-                    func_kwargs[arg.name.lower()] = arg.get_default()
 
         logger.debug(f"Executing block '{block_type}' {'eagerly ' if is_eager else ''}with context: {func_kwargs}")
         try:
@@ -157,8 +157,20 @@ class Executor:
             self.variable_names[var_ref] = var_name
             logger.debug(f"Loaded variable: [{var_ref[0]}-{var_ref[1]}]={self.variables[var_ref]}")
 
-    def extract_context(self, current_block: ElementTree.Element, is_eager=True):
-        context = self.create_default_context(current_block, is_eager=is_eager)
+    def extract_context_with_cache(self, current_block: ElementTree.Element, block_definition: PyBlockDefinition,
+                                   is_eager=True):
+        block_id = current_block.get("id")
+        if block_id is None:
+            return self.extract_context(current_block, block_definition, is_eager)
+        cache_key = (block_id, is_eager)
+        if cache_key in self.cached_contexts:
+            return self.cached_contexts[cache_key]
+        context = self.extract_context(current_block, block_definition, is_eager)
+        self.cached_contexts[cache_key] = context
+        return context
+
+    def extract_context(self, current_block: ElementTree.Element, block_definition: PyBlockDefinition, is_eager=True):
+        context = self.__get_block_kwargs_defaults(block_definition)
         for el in current_block:
             name = el.get("name").lower() if el.get("name") else None
             is_ref_type = self.__is_variable_ref_type(current_block, name)
@@ -200,7 +212,7 @@ class Executor:
                 return float(el.text)
             return el.text or ""
 
-    def parse_value(self, el: ElementTree.Element, is_ref_type = False):
+    def parse_value(self, el: ElementTree.Element, is_ref_type=False):
         block = el.find("block")
         if block is not None:
             return self.execute_block(block, is_eager=True)
@@ -225,7 +237,7 @@ class Executor:
 
         return func
 
-    def parse_shadow(self, el, is_ref_type = False):
+    def parse_shadow(self, el, is_ref_type=False):
         field = el.find("field")
         if field is not None:
             return self.parse_field(field, is_ref_type)
@@ -237,6 +249,7 @@ class Executor:
     """
     Adds an event listener that does not get removed on every run
     """
+
     def add_global_broadcast_listener(self, callback: Callable[[str, str], None]):
         self.global_event_listeners.append(callback)
 
@@ -317,7 +330,6 @@ class Executor:
         # Default to value-type
         return False
 
-
     def __create_plugin_contexts(self):
         for key, plugin_context_creator in self.plugin_contexts.items():
             context = plugin_context_creator(self)
@@ -329,3 +341,11 @@ class Executor:
             if plugin_context.__exit__:
                 plugin_context.__exit__(None, None, None)
         self.active_contexts.clear()
+
+    @staticmethod
+    def __get_block_kwargs_defaults(block_definition: PyBlockDefinition):
+        func_kwargs = {}
+        if block_definition and block_definition.arguments is not None:
+            for arg in block_definition.arguments:
+                func_kwargs[arg.name.lower()] = arg.get_default()
+        return func_kwargs
