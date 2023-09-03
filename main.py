@@ -1,6 +1,7 @@
 import json
 import logging.config
 import os
+import sys
 from typing import Callable, ContextManager
 
 import uvicorn
@@ -14,7 +15,8 @@ from engine.blocks.core_plugin import CorePluginContext
 from engine.blocks.default import default_blocks
 from engine.executor.executor import Executor
 from engine.plugins.gui import gui_blocks, GuiPluginContext
-from engine.plugins.keyboard import keyboard_blocks
+from engine.plugins.io import io_blocks
+from engine.plugins.keyboard import keyboard_blocks, KeyboardPluginContext
 from engine.plugins.numbers import numbers_blocks
 from engine.plugins.strings import strings_blocks
 
@@ -23,17 +25,21 @@ print(os.path.abspath(logging_config_file or "logging.conf"))
 logging.config.fileConfig(fname=logging_config_file, disable_existing_loggers=False)
 logger = logging.getLogger()
 
+sys.setrecursionlimit(2**16)
+
 loaded_blocks = [
     *default_blocks,
     *keyboard_blocks,
     *gui_blocks,
     *strings_blocks,
-    *numbers_blocks
+    *numbers_blocks,
+    *io_blocks
 ]
 
 loaded_plugin_contexts: list[Callable[['Executor'], ContextManager]] = [
     GuiPluginContext,
-    CorePluginContext
+    CorePluginContext,
+    KeyboardPluginContext
 ]
 
 app = FastAPI()
@@ -85,7 +91,6 @@ async def ws(websocket: WebSocket):
 
     def broadcast_listener(topic, message):
         broadcast_list.append([topic, message])
-        print(broadcast_list)
 
     executor.add_global_broadcast_listener(broadcast_listener)
 

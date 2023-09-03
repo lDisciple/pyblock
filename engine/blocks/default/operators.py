@@ -44,7 +44,6 @@ def operator_lt(context: Context, operand1: float, operand2: float):
 def operator_equals(context: Context, operand1: float, operand2: float):
     return operand1 == operand2
 
-
 @pyblock(category="operators", is_predefined=True)
 def operator_gt(context: Context, operand1: float, operand2: float):
     return operand1 > float(operand2)
@@ -72,12 +71,15 @@ def operator_not(context: Context, operand: bool):
 
 @pyblock(category="operators", is_predefined=True)
 def operator_join(context: Context, string1: str, string2: str):
-    return string1 + string2
+    return str(string1) + str(string2)
 
 
 @pyblock(category="operators", is_predefined=True)
 def operator_letter_of(context: Context, letter: int, string: str):
-    return string[int(letter)]
+    try:
+        return string[int(letter)]
+    except IndexError:
+        return None
 
 
 @pyblock(category="operators", is_predefined=True)

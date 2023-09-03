@@ -44,8 +44,10 @@ class Executor:
     event_listeners: [Callable[[str, str], None]] = []
     global_event_listeners: [Callable[[str, str], None]] = []
     variable_handlers: dict[str, VariableHandler] = {}
+    stopped: bool
 
     def __init__(self, load_default_blocks=True):
+        self.stopped = False
         if load_default_blocks:
             self.load_blocks(default_blocks)
         for handler in core_variable_handlers:
@@ -70,6 +72,7 @@ class Executor:
 
     def start(self, is_eager=False):
         self.stop()
+        self.stopped = False
         self.load_variables()
         self.__create_plugin_contexts()
         for block in self.starting_blocks:
@@ -95,6 +98,7 @@ class Executor:
     def stop(self):
         self.task_stack.clear()
         self.event_listeners.clear()
+        self.stopped = True
         self.__close_plugin_contexts()
 
     def get_variables_json(self):
@@ -112,6 +116,8 @@ class Executor:
         return self.execute_task(ExecutorTask(block), is_eager=is_eager)
 
     def execute_task(self, task: ExecutorTask, is_eager=True) -> Any:
+        if self.stopped:
+            return None
         block_node = task.element
         block_type = block_node.get("type")
         block_settings = self.get_block_settings(block_type)
@@ -130,7 +136,7 @@ class Executor:
             return_value = block_settings["func"](**func_kwargs)
         except Exception as e:
             logger.error("Could not execute block", exc_info=e)
-            self.broadcast("error", f"{type(e).__name__}: {str(e)}")
+            self.broadcast_exception(e)
             return None
         logger.debug(f"Executed block '{block_type}' returned '{return_value}' using context: {func_kwargs}")
         return return_value
@@ -192,7 +198,7 @@ class Executor:
             field_type = el.get("name")
             if field_type == "NUM":
                 return float(el.text)
-            return el.text
+            return el.text or ""
 
     def parse_value(self, el: ElementTree.Element, is_ref_type = False):
         block = el.find("block")
@@ -236,9 +242,20 @@ class Executor:
 
     def broadcast(self, topic: str, message: str):
         for event_listener in self.global_event_listeners:
-            event_listener(topic, message)
+            try:
+                event_listener(topic, message)
+            except Exception as e:
+                logger.error("Failed to run from broadcast", exc_info=e)
+                self.broadcast_exception(e)
         for event_listener in self.event_listeners:
-            event_listener(topic, message)
+            try:
+                event_listener(topic, message)
+            except Exception as e:
+                logger.error("Failed to run from broadcast", exc_info=e)
+                self.broadcast_exception(e)
+
+    def broadcast_exception(self, e: Exception):
+        self.broadcast("error", f"{type(e).__name__}: {str(e)}")
 
     def set_variable(self, ref: VariableRef, value: Any):
         if logger.level <= logging.DEBUG:

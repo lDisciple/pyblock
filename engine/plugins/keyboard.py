@@ -1,12 +1,16 @@
+import logging
 import string
+import time
+from contextlib import contextmanager
 
 import pyperclip
-from pynput.keyboard import Key, Controller
+from pynput.keyboard import Key, Controller, KeyCode
 
 from engine.blocks.block import pyblock, PyBlockDefinition, collect_blocks
 from engine.blocks.fields import Dropdown
 from engine.blocks.inputs import InputValue
 from engine.executor.context import Context
+from engine.executor.executor import Executor
 
 keyboard = Controller()
 
@@ -29,11 +33,7 @@ def resolve_key(key: str):
     definition=PyBlockDefinition(
         title="When %1 key is pressed",
         arguments=[
-            Dropdown(name="KEY_OPTION", options=[
-                ("Insert", "insert"),
-                ("Control", "ctrl"),
-                ("Tab", "tab")
-            ])
+            Dropdown(name="KEY_OPTION", options=key_list)
         ],
         has_next_statement=True,
         has_previous_statement=False,
@@ -172,7 +172,8 @@ def type_text(context: Context, text: str):
     )
 )
 def press_key(context: Context, key: str):
-    keyboard.press(resolve_key(key))
+    keyboard_context: KeyboardPluginContext = context.get_plugin_context(KeyboardPluginContext.__name__)
+    keyboard_context.press_key(resolve_key(key))
     context.next()
 
 
@@ -189,7 +190,8 @@ def press_key(context: Context, key: str):
     )
 )
 def release_key(context: Context, key: str):
-    keyboard.release(resolve_key(key))
+    keyboard_context: KeyboardPluginContext = context.get_plugin_context(KeyboardPluginContext.__name__)
+    keyboard_context.release_key(resolve_key(key))
     context.next()
 
 
@@ -219,7 +221,29 @@ def set_clipboard_to(context: Context, text: str):
     )
 )
 def clipboard_value(context: Context):
+    time.sleep(0.05)
     return pyperclip.paste()
 
 
 keyboard_blocks = collect_blocks(__name__)
+
+
+class KeyboardPluginContext:
+    def __init__(self, executor: Executor):
+        self.executor = executor
+        self.pressed_keys = set()
+
+    def __enter__(self):
+        pass
+
+    def press_key(self, key: str | Key | KeyCode):
+        keyboard.press(key)
+        self.pressed_keys.add(key)
+
+    def release_key(self, key: str | Key | KeyCode):
+        keyboard.release(key)
+        self.pressed_keys.remove(key)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        for key in self.pressed_keys:
+            keyboard.release(key)

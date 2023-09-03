@@ -1,3 +1,5 @@
+from threading import Thread
+
 from pynput.keyboard import Listener, KeyCode, Key
 
 from engine.executor.executor import Executor
@@ -19,18 +21,28 @@ class CorePluginContext:
 
     def create_listener(self):
         def on_release(key: (Key | KeyCode | None)):
-            if self.executor.is_complete():
-                return
-            if key is None:
-                return
-            if type(key) == Key:
-                self.executor.broadcast("keyboard", key.name)
-            if type(key) == KeyCode:
-                self.executor.broadcast("keyboard", key.char)
+            try:
+                if self.executor.is_complete():
+                    return
+                if key is None:
+                    return
+                if type(key) == Key:
+                    self.executor.broadcast("keyboard", key.name)
+                if type(key) == KeyCode:
+                    self.executor.broadcast("keyboard", key.char)
+            except Exception as e:
+                print(e)
 
         # Collect events until released
-        self.key_listener = Listener(on_release=on_release)
-        self.key_listener.start()
+        def start_listener():
+            with Listener(on_release=on_release) as listener:
+                self.key_listener = listener
+                try:
+                    self.key_listener.join()
+                except Exception as e:
+                    print(e)
+
+        Thread(target=start_listener).start()
 
     def __enter__(self):
         self.create_listener()

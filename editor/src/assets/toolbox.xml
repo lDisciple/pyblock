@@ -169,6 +169,7 @@
         </shadow>
       </value>
     </block>
+    <block type="string_newline" id="string_newline"></block>
     <block type="string_substring" id="string_substring">
       <value name="START">
         <shadow type="math_number">
@@ -319,6 +320,15 @@
     <block type="show_gui" id="show_gui">
     </block>
     <block type="hide_gui" id="hide_gui">
+    </block>
+  </category>
+  <category name="IO" id="io" colour="#316d8c" secondaryColour="#3c6073">
+    <block type="io_print" id="io_print">
+      <value name="MESSAGE">
+        <shadow type="text">
+          <field name="TEXT">Hello World!</field>
+        </shadow>
+      </value>
     </block>
   </category>
   <category name="%{BKY_CATEGORY_VARIABLES}" id="data" colour="#FF8C1A" secondaryColour="#DB6E00"

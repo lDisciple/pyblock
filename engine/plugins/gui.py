@@ -200,7 +200,6 @@ class GuiPluginContext:
         self.thread.start()
         while self.root is None:
             time.sleep(1)
-            print("SLEEP")
 
     def create_gui(self):
         pass
@@ -269,7 +268,6 @@ class GuiPluginContext:
         value = tk.IntVar()
         value.set(0)
         value.trace_add('write', lambda var, index, mode: setter("true" if value.get() else "false"))
-        value.trace_add('write', lambda var, index, mode: print(var))
 
         checkbox = tk.Checkbutton(panel,
                                   text=title,
@@ -282,7 +280,6 @@ class GuiPluginContext:
 
     @queue_call
     def add_textfield(self, title: str, setter: Callable[[str], None]):
-        print(self.root)
         panel, direction = self.get_current_panel()
         value = tk.StringVar()
         value.set("")
