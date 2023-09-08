@@ -41,22 +41,22 @@ def string_splitvar(context: Context, string: str, chars: str, variable: Variabl
     context.next()
 
 # Deprecated
-# @pyblock(
-#     category="operators",
-#     definition=PyBlockDefinition(
-#         title="split %1 on newline to %3",
-#         arguments=[
-#             InputValue(name="STRING"),
-#             Variable(name="VARIABLE", variable="list", variableTypes=["list"])
-#         ],
-#         has_next_statement=True,
-#         has_previous_statement=True,
-#         color=operator_color
-#     )
-# )
-# def string_splitvarnewline(context: Context, string: str, variable: VariableRef):
-#     context.set_variable(variable, str(string).split("\n"))
-#     context.next()
+@pyblock(
+    category="operators",
+    definition=PyBlockDefinition(
+        title="split %1 on newline to %3",
+        arguments=[
+            InputValue(name="STRING"),
+            Variable(name="VARIABLE", variable="list", variableTypes=["list"])
+        ],
+        has_next_statement=True,
+        has_previous_statement=True,
+        color=operator_color
+    )
+)
+def string_splitvarnewline(context: Context, string: str, variable: VariableRef):
+    context.set_variable(variable, str(string).split("\n"))
+    context.next()
 
 
 @pyblock(

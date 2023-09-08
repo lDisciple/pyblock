@@ -7,7 +7,7 @@ from engine.executor.variable_reference import VariableRef
 def event_whenflagclicked(context: Context):
     def listener(topic, message):
         if topic == "executor" and message == "start":
-            context.next()
+            return context.next()
 
     context.listen(listener)
 
@@ -17,7 +17,7 @@ def event_whenkeypressed(context: Context, key_option: str):
     def listener(topic, message):
         listen_key = key_option.replace(" arrow", "")
         if topic == "keyboard" and (key_option == "any" or message == listen_key):
-            context.next()
+            return context.next()
 
     context.listen(listener)
 
@@ -28,7 +28,7 @@ def event_whenbroadcastreceived(context: Context, broadcast_option: VariableRef)
 
     def listener(topic, received_message):
         if topic == "broadcast" and received_message == broadcast_value:
-            context.next()
+            return context.next()
 
     context.listen(listener)
 

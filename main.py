@@ -30,14 +30,14 @@ sys.setrecursionlimit(2**16)
 loaded_blocks = [
     *default_blocks,
     *keyboard_blocks,
-    *gui_blocks,
+    # *gui_blocks,
     *strings_blocks,
     *numbers_blocks,
     *io_blocks
 ]
 
 loaded_plugin_contexts: list[Callable[['Executor'], ContextManager]] = [
-    GuiPluginContext,
+    # GuiPluginContext,
     CorePluginContext,
     KeyboardPluginContext
 ]

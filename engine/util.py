@@ -11,6 +11,10 @@ def noop(*args, **kwargs):
     pass
 
 
+async def anoop(*args, **kwargs):
+    pass
+
+
 def create_blocks_from_xml(toolbox_path: str):
     toolbox_xml = ElementTree.parse(toolbox_path)
     current_category = "unknown"

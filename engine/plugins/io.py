@@ -18,9 +18,9 @@ color = 200
         color=color
     )
 )
-def io_print(context: Context, message: str):
+async def io_print(context: Context, message: str):
     context.broadcast("print", message)
-    context.next()
+    await context.next()
 
 
 io_blocks = collect_blocks(__name__)

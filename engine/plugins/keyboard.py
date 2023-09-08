@@ -41,9 +41,9 @@ def resolve_key(key: str):
     )
 )
 def keyboard_whenkeypressed(context: Context, key_option: str):
-    def listener(topic, message):
+    async def listener(topic, message):
         if topic == "keyboard" and message == key_option:
-            context.next()
+            await context.next()
 
     context.listen(listener)
 
