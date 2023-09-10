@@ -7,6 +7,7 @@ from typing import Callable, Optional
 from pynput.keyboard import Controller
 
 from engine.blocks.block import pyblock, PyBlockDefinition, collect_blocks
+from engine.executor.block_call import BlockCall
 from engine.executor.context import Context
 from engine.blocks.fields import Variable, Dropdown
 from engine.blocks.inputs import InputStatement, InputValue
@@ -32,11 +33,11 @@ color = 304
         color=color
     )
 )
-def create_layout(context: Context, substack: Callable):
+async def create_layout(context: Context, substack: BlockCall):
     gui_context: GuiPluginContext = context.get_plugin_context(GuiPluginContext.__name__)
     gui_context.create_gui()
-    substack()
-    context.next()
+    await substack()
+    await context.next()
 
 
 @pyblock(
@@ -57,15 +58,12 @@ def create_layout(context: Context, substack: Callable):
         color=color
     )
 )
-def add_panel(context: Context, direction: str, substack: Callable, is_return=False):
+async def add_panel(context: Context, direction: str, substack: BlockCall):
     gui_context: GuiPluginContext = context.get_plugin_context(GuiPluginContext.__name__)
-    if is_return:
-        gui_context.leave_current_panel()
-        return
     gui_context.add_inner_panel(direction)
-    substack()
-    context.recurse(is_return=True)
-    context.next()
+    await substack()
+    gui_context.leave_current_panel()
+    await context.next()
 
 
 @pyblock(
@@ -81,10 +79,10 @@ def add_panel(context: Context, direction: str, substack: Callable, is_return=Fa
         color=color
     )
 )
-def add_button(context: Context, title: str, broadcast_input: str):
+async def add_button(context: Context, title: str, broadcast_input: str):
     gui_context: GuiPluginContext = context.get_plugin_context(GuiPluginContext.__name__)
     gui_context.add_button(title, lambda: context.broadcast("broadcast", broadcast_input))
-    context.next()
+    await context.next()
 
 
 @pyblock(
@@ -100,10 +98,10 @@ def add_button(context: Context, title: str, broadcast_input: str):
         color=color
     )
 )
-def add_textfield(context: Context, title: str, variable: VariableRef):
+async def add_textfield(context: Context, title: str, variable: VariableRef):
     gui_context: GuiPluginContext = context.get_plugin_context(GuiPluginContext.__name__)
     gui_context.add_textfield(title, lambda x: context.set_variable(variable, x))
-    context.next()
+    await context.next()
 
 
 @pyblock(
@@ -119,10 +117,10 @@ def add_textfield(context: Context, title: str, variable: VariableRef):
         color=color
     )
 )
-def add_checkbox(context: Context, title: str, variable: VariableRef):
+async def add_checkbox(context: Context, title: str, variable: VariableRef):
     gui_context: GuiPluginContext = context.get_plugin_context(GuiPluginContext.__name__)
     gui_context.add_checkbox(title, lambda x: context.set_variable(variable, x))
-    context.next()
+    await context.next()
 
 
 @pyblock(
@@ -134,10 +132,10 @@ def add_checkbox(context: Context, title: str, variable: VariableRef):
         color=color
     )
 )
-def show_gui(context: Context):
+async def show_gui(context: Context):
     gui_context: GuiPluginContext = context.get_plugin_context(GuiPluginContext.__name__)
     gui_context.show()
-    context.next()
+    await context.next()
 
 
 @pyblock(
@@ -149,10 +147,10 @@ def show_gui(context: Context):
         color=color
     )
 )
-def hide_gui(context: Context):
+async def hide_gui(context: Context):
     gui_context: GuiPluginContext = context.get_plugin_context(GuiPluginContext.__name__)
     gui_context.hide()
-    context.next()
+    await context.next()
 
 
 gui_blocks = collect_blocks(__name__)

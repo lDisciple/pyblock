@@ -36,9 +36,9 @@ def string_trim(context: Context, string: str):
         color=operator_color
     )
 )
-def string_splitvar(context: Context, string: str, chars: str, variable: VariableRef):
+async def string_splitvar(context: Context, string: str, chars: str, variable: VariableRef):
     context.set_variable(variable, str(string).split(str(chars)))
-    context.next()
+    await context.next()
 
 # Deprecated
 @pyblock(
@@ -54,9 +54,9 @@ def string_splitvar(context: Context, string: str, chars: str, variable: Variabl
         color=operator_color
     )
 )
-def string_splitvarnewline(context: Context, string: str, variable: VariableRef):
+async def string_splitvarnewline(context: Context, string: str, variable: VariableRef):
     context.set_variable(variable, str(string).split("\n"))
-    context.next()
+    await context.next()
 
 
 @pyblock(
@@ -71,12 +71,12 @@ def string_splitvarnewline(context: Context, string: str, variable: VariableRef)
         extensions=["output_string"]
     )
 )
-def string_join(context: Context, variable: VariableRef, chars: str):
+async def string_join(context: Context, variable: VariableRef, chars: str):
     var_value: list[str] = context.get_variable(variable)
     if type(var_value) != list:
         var_value = list(var_value)
     context.set_variable(variable, str(chars).join(var_value))
-    context.next()
+    await context.next()
 
 
 @pyblock(

@@ -1,6 +1,7 @@
 import logging
 import threading
 import time
+from functools import total_ordering
 from queue import PriorityQueue, Empty
 from typing import Coroutine
 
@@ -9,8 +10,33 @@ from engine.executor.task import ExecutorStep
 logger = logging.getLogger(__name__)
 
 
+@total_ordering
+class StackElement:
+    priority: int
+    coroutine: Coroutine
+    executor_step: ExecutorStep | None
+
+    def __init__(self, coroutine: Coroutine, executor_step: ExecutorStep | None, priority: int):
+        self.coroutine = coroutine
+        self.executor_step = executor_step
+        self.priority = priority
+
+    def __lt__(self, other):
+        if type(other) != StackElement:
+            raise ValueError(f"Cannot compare {StackElement.__name__} with {other}")
+        return self.priority < other.priority
+
+    def __eq__(self, other):
+        if type(other) != StackElement:
+            raise ValueError(f"Cannot compare {StackElement.__name__} with {other}")
+        return self.priority == other.priority
+
+    def __iter__(self):
+        return iter((self.priority, self.coroutine, self.executor_step))
+
+
 class ExecutorTaskStack:
-    queue: PriorityQueue[tuple[int, Coroutine, ExecutorStep | None]]
+    queue: PriorityQueue[StackElement]
     task_counter: int
     current_task: int
     highlights: set[str] = set()
@@ -40,7 +66,7 @@ class ExecutorTaskStack:
             if not is_eager:
                 priority = self.task_counter
                 self.task_counter += 1
-            self.queue.put((priority, coro, executor_step))
+            self.queue.put(StackElement(coro, executor_step, priority))
 
     def _pop_task(self, ):
         with self.lock:

@@ -1,7 +1,5 @@
-import logging
 import string
 import time
-from contextlib import contextmanager
 
 import pyperclip
 from pynput.keyboard import Key, Controller, KeyCode
@@ -57,11 +55,11 @@ def keyboard_whenkeypressed(context: Context, key_option: str):
         color=color
     )
 )
-def next_pane(context: Context):
+async def next_pane(context: Context):
     with keyboard.pressed(Key.ctrl):
         keyboard.press(Key.page_down)
         keyboard.release(Key.page_down)
-    context.next()
+    await context.next()
 
 
 @pyblock(
@@ -73,11 +71,11 @@ def next_pane(context: Context):
         color=color
     )
 )
-def prev_pane(context: Context):
+async def prev_pane(context: Context):
     with keyboard.pressed(Key.ctrl):
         keyboard.press(Key.page_up)
         keyboard.release(Key.page_up)
-    context.next()
+    await context.next()
 
 
 @pyblock(
@@ -89,11 +87,11 @@ def prev_pane(context: Context):
         color=color
     )
 )
-def next_record(context: Context):
+async def next_record(context: Context):
     with keyboard.pressed(Key.shift):
         keyboard.press(Key.down)
         keyboard.release(Key.down)
-    context.next()
+    await context.next()
 
 
 @pyblock(
@@ -105,11 +103,11 @@ def next_record(context: Context):
         color=color
     )
 )
-def prev_record(context: Context):
+async def prev_record(context: Context):
     with keyboard.pressed(Key.shift):
         keyboard.press(Key.up)
         keyboard.release(Key.up)
-    context.next()
+    await context.next()
 
 
 @pyblock(
@@ -121,10 +119,10 @@ def prev_record(context: Context):
         color=color
     )
 )
-def next_field(context: Context):
+async def next_field(context: Context):
     keyboard.press(Key.tab)
     keyboard.release(Key.tab)
-    context.next()
+    await context.next()
 
 
 @pyblock(
@@ -136,10 +134,10 @@ def next_field(context: Context):
         color=color
     )
 )
-def go_to_first_record(context: Context):
+async def go_to_first_record(context: Context):
     keyboard.press(Key.page_up)
     keyboard.release(Key.page_up)
-    context.next()
+    await context.next()
 
 
 @pyblock(
@@ -154,9 +152,9 @@ def go_to_first_record(context: Context):
         color=color
     )
 )
-def type_text(context: Context, text: str):
+async def type_text(context: Context, text: str):
     keyboard.type(str(text))
-    context.next()
+    await context.next()
 
 
 @pyblock(
@@ -171,10 +169,10 @@ def type_text(context: Context, text: str):
         color=color
     )
 )
-def press_key(context: Context, key: str):
+async def press_key(context: Context, key: str):
     keyboard_context: KeyboardPluginContext = context.get_plugin_context(KeyboardPluginContext.__name__)
     keyboard_context.press_key(resolve_key(key))
-    context.next()
+    await context.next()
 
 
 @pyblock(
@@ -189,10 +187,10 @@ def press_key(context: Context, key: str):
         color=color
     )
 )
-def release_key(context: Context, key: str):
+async def release_key(context: Context, key: str):
     keyboard_context: KeyboardPluginContext = context.get_plugin_context(KeyboardPluginContext.__name__)
     keyboard_context.release_key(resolve_key(key))
-    context.next()
+    await context.next()
 
 
 @pyblock(
@@ -207,9 +205,9 @@ def release_key(context: Context, key: str):
         color=color
     )
 )
-def set_clipboard_to(context: Context, text: str):
+async def set_clipboard_to(context: Context, text: str):
     pyperclip.copy(text)
-    context.next()
+    await context.next()
 
 
 @pyblock(

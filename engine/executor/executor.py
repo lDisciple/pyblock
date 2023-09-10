@@ -4,7 +4,7 @@ import json
 import logging
 import re
 import xml.etree.ElementTree as ElementTree
-from typing import Any, Callable, ContextManager, Coroutine
+from typing import Any, Callable, ContextManager, Coroutine, get_origin
 
 from engine.blocks.block import PyBlockSettings, PyBlockDefinition
 from engine.blocks.default import default_blocks
@@ -132,8 +132,6 @@ class Executor:
                 return anoop
 
             async def block_task(**kwargs):
-                logger.debug(
-                    f"TEST block '{block_type}' {'eagerly ' if is_eager else ''}with context:")
                 await ExecutorStep(block_id, block_type, is_eager or block_is_run_type)
                 func_kwargs = {**default_func_kwargs, **kwargs}
                 func_kwargs.update(self.create_default_context(block_node, is_eager))
@@ -338,8 +336,13 @@ class Executor:
         func: Any = block_settings["func"]
         type_hints = func.__annotations__
         sanitised_name = Executor.remove_reserved_words_from_param_name(name)
-        if type_hints is not None and sanitised_name in type_hints and type_hints[sanitised_name] == Value:
-            return False
+        if type_hints is not None and sanitised_name in type_hints:
+            type_hint = type_hints[sanitised_name]
+            type_origin = get_origin(type_hint)
+            if type_origin is not None:
+                type_hint = type_origin
+            if issubclass(type_hint, Value):
+                return False
 
         # Default to immediate-type
         return True
