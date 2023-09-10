@@ -101,7 +101,7 @@ async def ws(websocket: WebSocket):
             "variables": executor.get_variables(),
             "isRunning": not executor.is_complete(),
             "taskCount": executor.get_task_count(),
-            "highlights": executor.get_highlights(),
+            "highlights": list(executor.get_highlights()),
             "broadcasts": broadcast_list
         }
         broadcast_list = []

@@ -1,76 +1,119 @@
-from collections import deque
-from threading import Thread
+import logging
+import threading
+import time
+from queue import PriorityQueue, Empty
 from typing import Coroutine
 
 from engine.executor.task import ExecutorStep
 
+logger = logging.getLogger(__name__)
+
 
 class ExecutorTaskStack:
-    task_list: deque[tuple[Coroutine, ExecutorStep]]
+    queue: PriorityQueue[tuple[int, Coroutine, ExecutorStep | None]]
     task_counter: int
+    current_task: int
+    highlights: set[str] = set()
+    is_completing: bool
+    is_running: bool
+    thread: threading.Thread | None
 
     def __init__(self, task_iteration_limit: int = 100_000):
-        self.task_list = deque()
+        self.queue = PriorityQueue()
+        self.lock = threading.Lock()
+        self.is_completing = False
+        self.is_running = False
+        self.task_counter = 0
+        self.current_task = -1
         self.task_iteration_limit = task_iteration_limit
         self.stopped = False
+        self.thread = None
 
-    def add_task(self, task):
-        Thread(target=self._add_task, args=[task]).start()
+    def add_task(self, coro: Coroutine):
+        # Initial task steps are always eager
+        self._add_task(coro, executor_step=None)
 
-    def _add_task(self, task):
-        result_tuple = self._run_task_iteration(task)
-        if result_tuple is not None:
-            self.task_list.appendleft(result_tuple)
+    def _add_task(self, coro: Coroutine, executor_step: ExecutorStep | None):
+        with self.lock:
+            is_eager = executor_step is None or executor_step.is_eager
+            priority = -1
+            if not is_eager:
+                priority = self.task_counter
+                self.task_counter += 1
+            self.queue.put((priority, coro, executor_step))
+
+    def _pop_task(self, ):
+        with self.lock:
+            item = self.queue.get()
+            _, _, step = item
+            return item
 
     def get_highlights(self):
-        return [step.identifier for coro, step in self.task_list if step is not None]
+        return self.highlights
+
+    def remove_highlight(self, executor_step: ExecutorStep):
+        if executor_step is not None and executor_step.identifier in self.highlights:
+            self.highlights.remove(executor_step.identifier)
+
+    def add_highlight(self, executor_step: ExecutorStep):
+        if executor_step is not None and executor_step.is_eager is False:
+            self.highlights.add(executor_step.identifier)
 
     def complete(self):
-        self.step(True)
+        self.is_completing = True
 
-    def step(self, until_completion=False):
-        Thread(target=self._step, args=[until_completion]).start()
+    def step(self):
+        self.current_task += 1
 
-    def _step(self, until_completion=False):
-        if len(self.task_list) == 0:
-            return
-        is_eager = True
-        coro, step = self.task_list.popleft()
-        while (is_eager or until_completion) and len(self.task_list) > 0 and not self.stopped:
-            result_tuple = self._run_task_iteration(coro)
-            if result_tuple is not None:
-                coro, step = result_tuple
-                # Run until first block result then skip through eager blocks
-                is_eager = True if step is None else step.is_eager
-                if not is_eager:
-                    self.task_list.appendleft(result_tuple)
+    def wait_until_complete(self):
+        self.is_completing = True
+        while self.is_completing:
+            time.sleep(0.1)
+
+    def run(self):
+        if not self.thread or not self.thread.isAlive():
+            self.thread = threading.Thread(target=self._run)
+            self.thread.start()
+
+    def _run(self):
+        logger.info("Started ExecutorTaskStack thread")
+        self.is_running = True
+        while self.is_running:
+            if self.queue.empty():
+                self.is_completing = False
+                self.task_counter = 0
+                self.current_task = -1
+                time.sleep(0.1)
+                continue
+            item = self._pop_task()
+            priority, coro, step = item
+            if priority > self.current_task and not self.is_completing:
+                self.add_highlight(step)
+                self.queue.put(item)  # Put exact item back
+                time.sleep(0.1)
             else:
-                is_eager = False
+                try:
+                    self.remove_highlight(step)
+                    out_step = coro.send(None)
+                    if type(out_step) == ExecutorStep:
+                        self.add_highlight(out_step)
+                        self._add_task(coro, out_step)
+                    else:
+                        raise ValueError(f"Invalid awaitable type. Expected {ExecutorStep.__name__}")
+                except StopIteration:
+                    pass
+        logger.info("Stopped ExecutorTaskStack thread")
 
     def stop(self):
-        self.stopped = True
-        for coro, step in self.task_list:
-            # ex = InterruptedError("Stopping executor") TODO
-            # coro.throw(type(ex), ex, None)
-            coro.close()
-        self.task_list.clear()
+        self.is_running = False
+        try:
+            while True:
+                self.queue.get_nowait()
+        except Empty:
+            pass
+        self.highlights.clear()
+        if self.thread:
+            self.thread.join()
 
     def __len__(self):
-        return len(self.task_list)
-
-    def _run_task_iteration(self, coro: Coroutine) -> tuple[Coroutine, ExecutorStep] | None:
-        limit = self.task_iteration_limit
-        while limit > 0 and not self.stopped:
-            try:
-                out_step = coro.send(None)
-                if type(out_step) == ExecutorStep:
-                    if not out_step.is_eager:
-                        return coro, out_step
-                else:
-                    raise ValueError(f"Invalid awaitable type. Expected {ExecutorStep.__name__}")
-            except StopIteration:
-                return None
-            limit -= 1
-        if not self.stopped:
-            raise RuntimeError(
-                "Reached maximum iterations on task. Please investigate for an infinite recursion or loop")
+        return 0 if self.queue.empty() else self.queue.qsize()

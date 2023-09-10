@@ -4,7 +4,6 @@ import json
 import logging
 import re
 import xml.etree.ElementTree as ElementTree
-from collections import deque
 from typing import Any, Callable, ContextManager, Coroutine
 
 from engine.blocks.block import PyBlockSettings, PyBlockDefinition
@@ -17,7 +16,7 @@ from engine.executor.value import Value, StatementValue
 from engine.executor.variable_reference import VariableRef
 from engine.executor.variables.core_variable_handlers import core_variable_handlers
 from engine.executor.variables.variable_handler import VariableHandler
-from engine.util import noop, anoop
+from engine.util import anoop
 
 logger = logging.getLogger(__name__)
 
@@ -75,9 +74,11 @@ class Executor:
         self.load_variables()
         self.__create_plugin_contexts()
         self.task_stack = ExecutorTaskStack()
+        self.task_stack.run()
         for block in self.starting_blocks:
             logger.debug("Added starting block to task list: %s", block.get("type"))
             self.execute_block(block, is_eager=is_eager)
+        self.task_stack.wait_until_complete()
         self.broadcast("executor", "start")
 
     def step(self):
