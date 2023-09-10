@@ -134,7 +134,8 @@ class ExecutorTaskStack:
         self.is_running = False
         try:
             while True:
-                self.queue.get_nowait()
+                item = self.queue.get_nowait()
+                item.coroutine.close()
         except Empty:
             pass
         self.highlights.clear()
