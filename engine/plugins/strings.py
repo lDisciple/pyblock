@@ -75,8 +75,7 @@ async def string_join(context: Context, variable: VariableRef, chars: str):
     var_value: list[str] = context.get_variable(variable)
     if type(var_value) != list:
         var_value = list(var_value)
-    context.set_variable(variable, str(chars).join(var_value))
-    await context.next()
+    return str(chars).join(var_value)
 
 
 @pyblock(
