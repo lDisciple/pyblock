@@ -34,10 +34,10 @@ def event_whenbroadcastreceived(context: Context, broadcast_option: VariableRef)
 
 
 @pyblock(category="events", is_predefined=True)
-def event_broadcast(context: Context, broadcast_input: VariableRef):
+async def event_broadcast(context: Context, broadcast_input: VariableRef):
     broadcast_value: str = context.get_variable(broadcast_input)
     context.broadcast("broadcast", broadcast_value)
-    context.next()
+    await context.next()
 
 
 event_blocks = collect_blocks(__name__)

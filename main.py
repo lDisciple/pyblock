@@ -16,6 +16,7 @@ from engine.blocks.default import default_blocks
 from engine.executor.executor import Executor
 from engine.plugins.gui import gui_blocks, GuiPluginContext
 from engine.plugins.io import io_blocks
+from engine.plugins.json import json_blocks
 from engine.plugins.keyboard import keyboard_blocks, KeyboardPluginContext
 from engine.plugins.numbers import numbers_blocks
 from engine.plugins.strings import strings_blocks
@@ -33,7 +34,8 @@ loaded_blocks = [
     *gui_blocks,
     *strings_blocks,
     *numbers_blocks,
-    *io_blocks
+    *io_blocks,
+    *json_blocks
 ]
 
 loaded_plugin_contexts: list[Callable[['Executor'], ContextManager]] = [

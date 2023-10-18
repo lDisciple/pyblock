@@ -23,4 +23,20 @@ async def io_print(context: Context, message: str):
     await context.next()
 
 
+@pyblock(
+    category=category,
+    definition=PyBlockDefinition(
+        title="Read file %1",
+        arguments=[
+            InputValue(name="PATH")
+        ],
+        color=color,
+        extensions=["output_string"]
+    )
+)
+async def io_readfile(context: Context, path: str):
+    with open(path, "r") as f:
+        return "\n".join(f.readlines())
+
+
 io_blocks = collect_blocks(__name__)

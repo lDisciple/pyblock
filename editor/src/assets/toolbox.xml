@@ -330,6 +330,42 @@
         </shadow>
       </value>
     </block>
+    <block type="io_readfile" id="io_readfile">
+      <value name="PATH">
+        <shadow type="text">
+          <field name="TEXT">./main.py</field>
+        </shadow>
+      </value>
+    </block>
+  </category>
+  <category name="Json" id="json" colour="#639e37" secondaryColour="#55733d">
+    <block type="json_parse" id="json_parse">
+      <value name="STRING">
+        <shadow type="text">
+          <field name="TEXT">{"a":123, "b": "hi"}</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="json_value" id="json_value">
+      <value name="KEY">
+        <shadow type="text">
+          <field name="TEXT">a</field>
+        </shadow>
+      </value>
+      <value name="OBJ">
+        <shadow type="text">
+          <field name="TEXT">{"a":123, "b": "hi"}</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="json_array_to_list" id="json_array_to_list">
+      <value name="VALUE">
+        <shadow type="text">
+          <field name="TEXT">[1,2,3]</field>
+        </shadow>
+      </value>
+      <field name="VARIABLE_LIST" variabletype="list" id="">list</field>
+    </block>
   </category>
   <category name="%{BKY_CATEGORY_VARIABLES}" id="data" colour="#FF8C1A" secondaryColour="#DB6E00"
             custom="VARIABLE"></category>

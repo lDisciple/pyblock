@@ -354,7 +354,10 @@ class Executor:
                 if type(func_kwargs[k]) == StatementValue:
                     func_kwargs[k] = func_kwargs[k].get(is_eager)
                 else:
-                    func_kwargs[k] = await func_kwargs[k].get()
+                    result = func_kwargs[k].get()
+                    if inspect.isawaitable(result):
+                        result = await result
+                    func_kwargs[k] = result
 
     def __create_plugin_contexts(self):
         for key, plugin_context_creator in self.plugin_contexts.items():
