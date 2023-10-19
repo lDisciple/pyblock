@@ -6,28 +6,28 @@ from engine.executor.context import Context
 
 
 @pyblock(category="operators", is_predefined=True)
-def operator_add(context: Context, operand1: float, operand2: float):
-    return float(operand1) + float(operand2)
+def operator_add(context: Context, num1: float, num2: float):
+    return float(num1) + float(num2)
 
 
 @pyblock(category="operators", is_predefined=True)
-def operator_subtract(context: Context, operand1: float, operand2: float):
-    return float(operand1) - float(operand2)
+def operator_subtract(context: Context, num1: float, num2: float):
+    return float(num1) - float(num2)
 
 
 @pyblock(category="operators", is_predefined=True)
-def operator_multiply(context: Context, operand1: float, operand2: float):
-    return float(operand1) * float(operand2)
+def operator_multiply(context: Context, num1: float, num2: float):
+    return float(num1) * float(num2)
 
 
 @pyblock(category="operators", is_predefined=True)
-def operator_divide(context: Context, operand1: float, operand2: float):
-    return float(operand1) / float(operand2)
+def operator_divide(context: Context, num1: float, num2: float):
+    return float(num1) / float(num2)
 
 
 @pyblock(category="operators", is_predefined=True)
-def operator_mod(context: Context, operand1: float, operand2: float):
-    return float(operand1) % float(operand2)
+def operator_mod(context: Context, num1: float, num2: float):
+    return float(num1) % float(num2)
 
 
 @pyblock(category="operators", is_predefined=True)
