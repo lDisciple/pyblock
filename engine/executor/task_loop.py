@@ -37,8 +37,8 @@ class StackElement:
 
 class ExecutorTaskStack:
     task_queue: PriorityQueue[StackElement]
-    eager_queue: Queue[StackElement]
-    uninitialised_tasks: list[StackElement]
+    eager_queue: LifoQueue[StackElement]
+    uninitialised_tasks: list[Coroutine]
     task_counter: int
     current_task: int
     highlights: set[str] = set()
@@ -48,7 +48,7 @@ class ExecutorTaskStack:
 
     def __init__(self, task_iteration_limit: int = 100_000):
         self.task_queue = PriorityQueue()
-        self.eager_queue = Queue()
+        self.eager_queue = LifoQueue()
         self.uninitialised_tasks = []
         self.lock = threading.Lock()
         self.is_completing = False
@@ -65,6 +65,10 @@ class ExecutorTaskStack:
 
     def _add_task(self, coro: Coroutine, executor_step: ExecutorStep | None):
         with self.lock:
+            if executor_step is None:
+                logger.debug(f"init queue: {coro}")
+                self.uninitialised_tasks.append(coro)
+                return
             is_eager = executor_step is None or executor_step.is_eager
             if not is_eager:
                 priority = self.task_counter
@@ -129,6 +133,12 @@ class ExecutorTaskStack:
         logger.info("Started ExecutorTaskStack thread")
         self.is_running = True
         while self.is_running:
+            if len(self.uninitialised_tasks) > 0:
+                tasks = self.uninitialised_tasks
+                self.uninitialised_tasks = []
+                logger.debug(f"Init tasks: {len(tasks)}")
+                for coro in reversed(tasks):
+                    self._execute_coro(coro, None)
             if self._is_empty():
                 self.is_completing = False
                 self.task_counter = 0
@@ -146,7 +156,7 @@ class ExecutorTaskStack:
                     self._execute_coro(coro, step)
                 except StopIteration:
                     logger.debug("Stop iter")
-                    return
+                    pass
         logger.info("Stopped ExecutorTaskStack thread")
 
     def stop(self):
@@ -168,4 +178,4 @@ class ExecutorTaskStack:
             self.thread.join()
 
     def __len__(self):
-        return self.task_queue.qsize() + self.eager_queue.qsize()
+        return self.task_queue.qsize() + self.eager_queue.qsize() + len(self.uninitialised_tasks)
