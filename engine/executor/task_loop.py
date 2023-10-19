@@ -2,7 +2,7 @@ import logging
 import threading
 import time
 from functools import total_ordering
-from queue import PriorityQueue, Empty
+from queue import PriorityQueue, Empty, Queue, LifoQueue
 from typing import Coroutine
 
 from engine.executor.task import ExecutorStep
@@ -22,12 +22,12 @@ class StackElement:
         self.priority = priority
 
     def __lt__(self, other):
-        if type(other) != StackElement:
+        if type(other) is not StackElement:
             raise ValueError(f"Cannot compare {StackElement.__name__} with {other}")
         return self.priority < other.priority
 
     def __eq__(self, other):
-        if type(other) != StackElement:
+        if type(other) is not StackElement:
             raise ValueError(f"Cannot compare {StackElement.__name__} with {other}")
         return self.priority == other.priority
 
@@ -36,7 +36,9 @@ class StackElement:
 
 
 class ExecutorTaskStack:
-    queue: PriorityQueue[StackElement]
+    task_queue: PriorityQueue[StackElement]
+    eager_queue: Queue[StackElement]
+    uninitialised_tasks: list[StackElement]
     task_counter: int
     current_task: int
     highlights: set[str] = set()
@@ -45,7 +47,9 @@ class ExecutorTaskStack:
     thread: threading.Thread | None
 
     def __init__(self, task_iteration_limit: int = 100_000):
-        self.queue = PriorityQueue()
+        self.task_queue = PriorityQueue()
+        self.eager_queue = Queue()
+        self.uninitialised_tasks = []
         self.lock = threading.Lock()
         self.is_completing = False
         self.is_running = False
@@ -62,17 +66,26 @@ class ExecutorTaskStack:
     def _add_task(self, coro: Coroutine, executor_step: ExecutorStep | None):
         with self.lock:
             is_eager = executor_step is None or executor_step.is_eager
-            priority = -1
             if not is_eager:
                 priority = self.task_counter
+                self.task_queue.put(StackElement(coro, executor_step, priority))
+                logger.debug(f"Task queue: {executor_step} [{priority}]")
                 self.task_counter += 1
-            self.queue.put(StackElement(coro, executor_step, priority))
+            else:
+                logger.debug(f"Eager queue: {executor_step}")
+                self.eager_queue.put(StackElement(coro, executor_step, -1))
 
     def _pop_task(self, ):
         with self.lock:
-            item = self.queue.get()
-            _, _, step = item
+            if self.eager_queue.qsize() > 0:
+                item = self.eager_queue.get()
+            else:
+                item = self.task_queue.get()
+            logger.debug(f"Pop queue: {item.executor_step}")
             return item
+
+    def _is_empty(self):
+        return self.eager_queue.qsize() == 0 and self.task_queue.qsize() == 0
 
     def get_highlights(self):
         return self.highlights
@@ -96,6 +109,17 @@ class ExecutorTaskStack:
         while self.is_completing:
             time.sleep(0.1)
 
+    def _execute_coro(self, coro: Coroutine, step: ExecutorStep | None) -> ExecutorStep:
+        self.remove_highlight(step)
+        out_step = coro.send(None)
+        logger.debug(f"Step {out_step}")
+        if type(out_step) is ExecutorStep:
+            self.add_highlight(out_step)
+            self._add_task(coro, out_step)
+            return out_step
+        else:
+            raise ValueError(f"Invalid awaitable type. Expected {ExecutorStep.__name__}")
+
     def run(self):
         if not self.thread or not self.thread.isAlive():
             self.thread = threading.Thread(target=self._run)
@@ -105,7 +129,7 @@ class ExecutorTaskStack:
         logger.info("Started ExecutorTaskStack thread")
         self.is_running = True
         while self.is_running:
-            if self.queue.empty():
+            if self._is_empty():
                 self.is_completing = False
                 self.task_counter = 0
                 self.current_task = -1
@@ -115,26 +139,27 @@ class ExecutorTaskStack:
             priority, coro, step = item
             if priority > self.current_task and not self.is_completing:
                 self.add_highlight(step)
-                self.queue.put(item)  # Put exact item back
+                self.task_queue.put(item)  # Put exact item back into task_queue (eager tasks should not reach here)
                 time.sleep(0.1)
             else:
                 try:
-                    self.remove_highlight(step)
-                    out_step = coro.send(None)
-                    if type(out_step) == ExecutorStep:
-                        self.add_highlight(out_step)
-                        self._add_task(coro, out_step)
-                    else:
-                        raise ValueError(f"Invalid awaitable type. Expected {ExecutorStep.__name__}")
+                    self._execute_coro(coro, step)
                 except StopIteration:
-                    pass
+                    logger.debug("Stop iter")
+                    return
         logger.info("Stopped ExecutorTaskStack thread")
 
     def stop(self):
         self.is_running = False
         try:
             while True:
-                item = self.queue.get_nowait()
+                item = self.task_queue.get_nowait()
+                item.coroutine.close()
+        except Empty:
+            pass
+        try:
+            while True:
+                item = self.eager_queue.get_nowait()
                 item.coroutine.close()
         except Empty:
             pass
@@ -143,4 +168,4 @@ class ExecutorTaskStack:
             self.thread.join()
 
     def __len__(self):
-        return 0 if self.queue.empty() else self.queue.qsize()
+        return self.task_queue.qsize() + self.eager_queue.qsize()
