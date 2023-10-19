@@ -138,7 +138,10 @@ class ExecutorTaskStack:
                 self.uninitialised_tasks = []
                 logger.debug(f"Init tasks: {len(tasks)}")
                 for coro in reversed(tasks):
-                    self._execute_coro(coro, None)
+                    try:
+                        self._execute_coro(coro, None)
+                    except StopIteration:
+                        pass
             if self._is_empty():
                 self.is_completing = False
                 self.task_counter = 0
@@ -155,7 +158,6 @@ class ExecutorTaskStack:
                 try:
                     self._execute_coro(coro, step)
                 except StopIteration:
-                    logger.debug("Stop iter")
                     pass
         logger.info("Stopped ExecutorTaskStack thread")
 
